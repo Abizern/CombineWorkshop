@@ -16,7 +16,7 @@ import Combine
 
 final class StepOneViewController: UIViewController {
 
-    private var buttonSwitchValue: Bool = false
+    @Published private var buttonSwitchValue: Bool = false
     private var switchSubscriber: AnyCancellable?
 
     @IBOutlet private weak var buttonSwitch: UISwitch!
@@ -24,6 +24,9 @@ final class StepOneViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        switchSubscriber = $buttonSwitchValue
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.isEnabled, on: nextButton)
     }
 
     @IBAction func didSwitch(_ sender: UISwitch) {
