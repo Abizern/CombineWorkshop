@@ -20,12 +20,16 @@ final class StepTwoViewController: UIViewController {
     @IBOutlet private weak var nextButton: UIButton!
     private var switchesSubscriber: AnyCancellable?
     
-    private var switchOneValue: Bool = false
-    private var switchTwoValue: Bool = false
-    private var switchThreeValue: Bool = false
+    @Published private var switchOneValue: Bool = false
+    @Published private var switchTwoValue: Bool = false
+    @Published private var switchThreeValue: Bool = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        switchesSubscriber = Publishers
+            .CombineLatest3($switchOneValue, $switchTwoValue, $switchThreeValue) { $0 && $1 && $2 }
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.isEnabled, on: nextButton)
     }
 
     @IBAction func switchedOne(_ sender: UISwitch) {
