@@ -39,7 +39,9 @@ final class StepFourViewController: UITableViewController {
         setupSearchSubscriber()
 
         // Step 1: Make sure that the table view reloads its data when $repos changes
-        _ = $repos
+        let sink = $repos.receive(on: DispatchQueue.main).sink { _ in
+            self.tableView.reloadData()}
+        repositoriesSubscriberCancellable = AnyCancellable(sink)
     }
 
     private func githubAPISearchURL(for query: String) -> URL {

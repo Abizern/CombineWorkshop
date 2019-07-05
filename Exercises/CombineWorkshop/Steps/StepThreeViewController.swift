@@ -33,34 +33,55 @@ final class StepThreeViewController: UIViewController {
     @IBOutlet private weak var passwordTextField: UITextField!
     @IBOutlet private weak var passwordConfirmTextField: UITextField!
 
-    var username: String = ""
-    var password: String = ""
-    var passwordAgain: String = ""
+    @Published var username: String = ""
+    @Published var password: String = ""
+    @Published var passwordAgain: String = ""
 
     var validatedPassword: AnyPublisher<String?, Never> {
-        fatalError("This needs to be implemented")
         // Password and password again should match
         // Password should be 8 characters or more
         // Password should not exists in the weakPasswords array
         // Use `.eraseToAnyPublisher()` in the end
+
+        Publishers.CombineLatest($password, $passwordAgain) { (pass, passA) -> String? in
+            if pass.count > 7 && pass == passA && !self.weakPasswords.contains(pass) {
+                return pass
+            } else {
+                return nil
+            }
+        }.eraseToAnyPublisher()
     }
 
     var validatedUsername: AnyPublisher<String?, Never> {
-        fatalError("This needs to be implemented")
         // Username should not exist yet in the `registeredUsernames` array
         // Username should be 4 characters or more
+        $username.map { (username) -> String? in
+            if username.count > 3 && !self.registeredUsernames.contains(username) {
+                return username
+            } else {
+                return nil
+            }
+        }.eraseToAnyPublisher()
     }
 
     var validatedCredentials: AnyPublisher<(String, String)?, Never> {
-        fatalError("This needs to be implemented")
         // Bring the validation of password and username together
+        Publishers.CombineLatest(validatedUsername, validatedPassword) { (username, password) -> (String, String)? in
+            switch (username, password) {
+            case let (.some(name), .some(pass)): return (name, pass)
+            default: return nil
+            }
+        }.eraseToAnyPublisher()
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         /// Uncomment this and implement
-//        self.validationSubscriber = self.validatedCredentials
+        self.validationSubscriber = self.validatedCredentials
+            .map{ $0 != nil }
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.isEnabled, on: nextButton)
     }
 
     private func usernameAvailable(_ username: String, completion: (_ available: Bool) -> Void) {
